@@ -8,7 +8,7 @@ import cors from "cors";
 import dotenv from "dotenv";
 import express from "express";
 import ffmpegPath from "ffmpeg-static";
-
+import { GoogleGenerativeAI, SchemaType } from "@google/generative-ai";
 dotenv.config({ path: path.resolve(process.cwd(), "..", ".env") });
 
 const app = express();

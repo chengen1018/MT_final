@@ -61,7 +61,7 @@ export default function RecordScreen() {
             headers: { "Content-Type": "application/json" },
             body: JSON.stringify({
               transcription,
-              elderTitle: "阿公/阿嬤",
+              elderTitle: "Grandpa/Grandma",
             }),
           });
           const summaryResult = await summaryResp.json();
@@ -69,30 +69,30 @@ export default function RecordScreen() {
             setSummary(summaryResult?.summary ?? null);
           } else {
             console.error("Summary Server Error:", summaryResult);
-            setAnalysisText(`❌ 摘要失敗：${summaryResult?.error || "未知錯誤"}`);
+            setAnalysisText(`❌ Summary failed: ${summaryResult?.error || "Unknown error"}`);
           }
         } else {
-          setAnalysisText("⚠️ 轉錄完成，但沒有辨識出任何文字 (可能是聲音太小或空白)。");
+          setAnalysisText("⚠️ Transcription completed, but no text was recognized (audio may be too quiet or empty).");
         }
       } else {
         console.error("STT Server Error:", result);
 
         // Check for specific error types
-        const errorMessage = result.error?.message || result.error || "未知錯誤";
+        const errorMessage = result.error?.message || result.error || "Unknown error";
         const errorStatus = result.error?.status;
 
         if (errorStatus === "AUDIO_TOO_LARGE" || errorMessage.includes("exceeds duration limit")) {
-          setAnalysisText(`❌ 錄音檔太大或時間太長\n\n請錄製較短的音訊（建議60秒以內）`);
+          setAnalysisText(`❌ Audio file is too large or too long\n\nPlease record shorter audio (recommended under 60 seconds)`);
         } else if (errorMessage.includes("INVALID_ARGUMENT")) {
-          setAnalysisText(`❌ 音訊格式錯誤或檔案損壞\n\n${errorMessage}`);
+          setAnalysisText(`❌ Invalid audio format or corrupted file\n\n${errorMessage}`);
         } else {
-          setAnalysisText(`❌ 轉錄失敗: ${errorMessage}`);
+          setAnalysisText(`❌ Transcription failed: ${errorMessage}`);
         }
       }
 
     } catch (err) {
       console.error("處理錄音失敗:", err);
-      setAnalysisText("❌ 系統錯誤：無法讀取錄音檔或網路連線異常。");
+      setAnalysisText("❌ System error: Unable to read audio file or network connection issue.");
     } finally {
       setLoading(false);
     }
@@ -103,13 +103,13 @@ export default function RecordScreen() {
       style={styles.container}
       contentContainerStyle={styles.scrollContent}
     >
-      <Text style={styles.title}>🎤 語音轉文字 (Google STT)</Text>
+      <Text style={styles.title}>🎤 Speech to Text (Google STT)</Text>
 
       {/* 錄音元件 */}
       <AudioRecorder onRecordingFinished={uploadAudioToServer} />
 
       {/* 載入狀態 */}
-      {loading && <Text style={styles.loading}>正在上傳並分析音訊中...</Text>}
+      {loading && <Text style={styles.loading}>Uploading and analyzing audio...</Text>}
 
       {/* 結果顯示 */}
       {analysisText !== "" && <ResultDisplay text={analysisText} />}

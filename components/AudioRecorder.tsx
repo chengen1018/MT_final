@@ -1,7 +1,7 @@
 //錄音元件
-import React, { useState } from 'react';
-import { View, Text, Button, StyleSheet } from 'react-native';
 import { Audio } from 'expo-av';
+import React, { useState } from 'react';
+import { Button, StyleSheet, Text, View } from 'react-native';
 
 const AudioRecorder: React.FC<{ onRecordingFinished: (uri: string) => void }> = ({ onRecordingFinished }) => {
   const [recording, setRecording] = useState<Audio.Recording | null>(null);
@@ -11,7 +11,7 @@ const AudioRecorder: React.FC<{ onRecordingFinished: (uri: string) => void }> = 
     try {
       const permission = await Audio.requestPermissionsAsync();
       if (!permission.granted) {
-        alert("需要錄音權限");
+        alert("Recording permission required");
         return;
       }
 
@@ -50,9 +50,9 @@ const AudioRecorder: React.FC<{ onRecordingFinished: (uri: string) => void }> = 
 
   return (
     <View style={styles.container}>
-      <Text>{isRecording ? "錄音中..." : "準備錄音"}</Text>
+      <Text>{isRecording ? "Recording..." : "Ready to Record"}</Text>
       <Button
-        title={isRecording ? "停止錄音" : "開始錄音"}
+        title={isRecording ? "Stop Recording" : "Start Recording"}
         onPress={isRecording ? stopRecording : startRecording}
       />
     </View>

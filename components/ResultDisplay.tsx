@@ -1,11 +1,11 @@
 //結果顯示元件
 import React from 'react';
-import { View, Text, StyleSheet } from 'react-native';
+import { StyleSheet, Text, View } from 'react-native';
 
 const ResultDisplay: React.FC<{ text: string }> = ({ text }) => {
   return (
     <View style={styles.container}>
-      <Text style={styles.title}>轉錄文字：</Text>
+      <Text style={styles.title}>Transcribed Text:</Text>
       <Text>{text}</Text>
     </View>
   );

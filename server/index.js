@@ -19,7 +19,7 @@ app.use(express.json({ limit: "25mb" }));
 const GOOGLE_API_KEY = process.env.GOOGLE_API_KEY || process.env.EXPO_PUBLIC_GOOGLE_API_KEY || "";
 if (!GOOGLE_API_KEY) {
   console.warn(
-    "[stt-server] 找不到 GOOGLE_API_KEY / EXPO_PUBLIC_GOOGLE_API_KEY。請在專案根目錄 `.env` 設定其中之一。"
+    "[stt-server] GOOGLE_API_KEY / EXPO_PUBLIC_GOOGLE_API_KEY not found. Please set one of them in the `.env` file in the project root directory."
   );
 }
 
@@ -27,7 +27,7 @@ const GEMINI_API_KEY =
   process.env.GEMINI_API_KEY || process.env.GOOGLE_API_KEY || process.env.EXPO_PUBLIC_GOOGLE_API_KEY || "";
 const GEMINI_MODEL = process.env.GEMINI_MODEL || "gemini-1.5-flash-latest";
 if (!GEMINI_API_KEY) {
-  console.warn("[stt-server] 找不到 GEMINI_API_KEY（可先沿用 GOOGLE_API_KEY），/summary 將無法使用。");
+  console.warn("[stt-server] GEMINI_API_KEY not found (can use GOOGLE_API_KEY instead), /summary endpoint will not be available.");
 }
 
 function formatDateInTaipei(date = new Date()) {
@@ -47,7 +47,7 @@ function formatDateInTaipei(date = new Date()) {
 function runFfmpeg(args) {
   return new Promise((resolve, reject) => {
     if (!ffmpegPath) {
-      reject(new Error("找不到 ffmpeg（ffmpeg-static 回傳空值）"));
+      reject(new Error("ffmpeg not found (ffmpeg-static returned null)"));
       return;
     }
     const child = spawn(ffmpegPath, args, { stdio: ["ignore", "pipe", "pipe"] });
@@ -60,7 +60,7 @@ function runFfmpeg(args) {
     child.on("error", reject);
     child.on("close", (code) => {
       if (code === 0) resolve();
-      else reject(new Error(`ffmpeg 轉檔失敗 (code=${code})\n${stderr}`));
+      else reject(new Error(`ffmpeg conversion failed (code=${code})\n${stderr}`));
     });
   });
 }
@@ -90,7 +90,7 @@ async function googleSpeechRecognize({ apiKey, requestBody }) {
       msg.includes("For audio longer than 1 min use LongRunningRecognize"));
 
   if (!isTooLong) {
-    const err = new Error(msg || "Google STT 同步辨識失敗");
+    const err = new Error(msg || "Google STT synchronous recognition failed");
     err.status = resp.status;
     err.payload = syncResult;
     throw err;
@@ -105,7 +105,7 @@ async function googleSpeechRecognize({ apiKey, requestBody }) {
 
   const op = await lrResp.json().catch(() => ({}));
   if (!lrResp.ok) {
-    const err = new Error(op?.error?.message || "Google STT 長音檔辨識啟動失敗");
+    const err = new Error(op?.error?.message || "Google STT long-running recognition failed to start");
     err.status = lrResp.status;
     err.payload = op;
     throw err;
@@ -113,7 +113,7 @@ async function googleSpeechRecognize({ apiKey, requestBody }) {
 
   const opName = op?.name;
   if (!opName) {
-    const err = new Error("Google STT 長音檔辨識未回傳 operation name");
+    const err = new Error("Google STT long-running recognition did not return operation name");
     err.status = 502;
     err.payload = op;
     throw err;
@@ -129,7 +129,7 @@ async function googleSpeechRecognize({ apiKey, requestBody }) {
 
   while (true) {
     if (Date.now() - start > timeoutMs) {
-      const err = new Error("Google STT 長音檔辨識逾時（operation 尚未完成）");
+      const err = new Error("Google STT long-running recognition timeout (operation not completed)");
       err.status = 504;
       err.payload = { operation: opName };
       throw err;
@@ -139,7 +139,7 @@ async function googleSpeechRecognize({ apiKey, requestBody }) {
     const poll = await pollResp.json().catch(() => ({}));
 
     if (!pollResp.ok) {
-      const err = new Error(poll?.error?.message || "Google STT operation 輪詢失敗");
+      const err = new Error(poll?.error?.message || "Google STT operation polling failed");
       err.status = pollResp.status;
       err.payload = poll;
       throw err;
@@ -147,7 +147,7 @@ async function googleSpeechRecognize({ apiKey, requestBody }) {
 
     if (poll?.done) {
       if (poll?.error) {
-        const err = new Error(poll?.error?.message || "Google STT 長音檔辨識失敗");
+        const err = new Error(poll?.error?.message || "Google STT long-running recognition failed");
         err.status = 502;
         err.payload = poll;
         throw err;
@@ -171,18 +171,18 @@ app.get("/health", (_req, res) => {
  *  - elderTitle?: string (長輩稱呼，影響 audio_summary 開頭)
  */
 app.post("/summary", async (req, res) => {
-  const { transcription, elderTitle = "阿公/阿嬤" } = req.body ?? {};
+  const { transcription, elderTitle = "Grandpa/Grandma" } = req.body ?? {};
 
   if (!transcription || typeof transcription !== "string") {
-    res.status(400).json({ error: "缺少 transcription（字串）" });
+    res.status(400).json({ error: "Missing transcription (string)" });
     return;
   }
   if (!GEMINI_API_KEY) {
-    res.status(500).json({ error: "伺服器未設定 GEMINI_API_KEY（可沿用 GOOGLE_API_KEY）" });
+    res.status(500).json({ error: "Server has not set GEMINI_API_KEY (can use GOOGLE_API_KEY instead)" });
     return;
   }
   if (!GEMINI_MODEL || typeof GEMINI_MODEL !== "string") {
-    res.status(500).json({ error: "伺服器未設定 GEMINI_MODEL" });
+    res.status(500).json({ error: "Server has not set GEMINI_MODEL" });
     return;
   }
 
@@ -322,7 +322,7 @@ ${transcription}`;
       json = JSON.parse(text);
     } catch (_e) {
       res.status(502).json({
-        error: "Gemini 回傳不是合法 JSON，請確認 GEMINI_MODEL/提示詞/回應設定",
+        error: "Gemini returned invalid JSON, please check GEMINI_MODEL/prompt/response settings",
         rawText: text?.slice?.(0, 2000) ?? String(text),
       });
       return;
@@ -344,7 +344,7 @@ ${transcription}`;
 async function getAudioDuration(filePath) {
   return new Promise((resolve, reject) => {
     if (!ffprobePath?.path) {
-      reject(new Error("找不到 ffprobe"));
+      reject(new Error("ffprobe not found"));
       return;
     }
 
@@ -377,7 +377,7 @@ async function getAudioDuration(filePath) {
         const duration = parseFloat(stdout.trim());
         resolve(duration);
       } else {
-        reject(new Error(`ffprobe 失敗 (code=${code})\n${stderr}`));
+        reject(new Error(`ffprobe failed (code=${code})\n${stderr}`));
       }
     });
   });
@@ -438,11 +438,11 @@ app.post("/stt", async (req, res) => {
   const { audioBase64, languageCode = "en-US" } = req.body ?? {};
 
   if (!audioBase64 || typeof audioBase64 !== "string") {
-    res.status(400).json({ error: "缺少 audioBase64（字串）" });
+    res.status(400).json({ error: "Missing audioBase64 (string)" });
     return;
   }
   if (!GOOGLE_API_KEY) {
-    res.status(500).json({ error: "伺服器未設定 GOOGLE_API_KEY / EXPO_PUBLIC_GOOGLE_API_KEY" });
+    res.status(500).json({ error: "Server has not set GOOGLE_API_KEY / EXPO_PUBLIC_GOOGLE_API_KEY" });
     return;
   }
 
@@ -540,7 +540,7 @@ app.post("/stt", async (req, res) => {
 
           if (currentSpeaker !== speakerTag) {
             if (started) transcription += "\n\n";
-            transcription += `[說話者 ${speakerTag}]: `;
+            transcription += `[Speaker ${speakerTag}]: `;
             currentSpeaker = speakerTag;
             started = true;
           }

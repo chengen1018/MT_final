@@ -36,46 +36,46 @@ const Section: React.FC<{ title: string; children: React.ReactNode }> = ({ title
 const ElderSummaryDisplay: React.FC<{ summary: ElderSummary }> = ({ summary }) => {
   return (
     <View style={styles.card}>
-      <Text style={styles.cardTitle}>給長輩的重點整理</Text>
+      <Text style={styles.cardTitle}>Key Summary for Seniors</Text>
 
-      <Section title="醫生說我怎麼了">
+      <Section title="What the Doctor Said">
         <Text style={styles.text}>
-          {summary?.diagnosis?.condition?.trim() ? summary.diagnosis.condition : "醫生今天沒有明講病況。"}
+          {summary?.diagnosis?.condition?.trim() ? summary.diagnosis.condition : "The doctor did not specify a condition today."}
         </Text>
         {!!summary?.diagnosis?.reason?.trim() && (
-          <Text style={styles.subText}>可能原因：{summary.diagnosis.reason}</Text>
+          <Text style={styles.subText}>Possible Cause: {summary.diagnosis.reason}</Text>
         )}
       </Section>
 
-      <Section title="最重要不可以（請特別注意）">
-        {renderList(summary?.prohibitions, "醫生今天沒有特別交代『不可以』的事情。")}
+      <Section title="Important Prohibitions (Please Pay Special Attention)">
+        {renderList(summary?.prohibitions, "The doctor did not mention any specific prohibitions today.")}
       </Section>
 
-      <Section title="危險徵兆（出現就要快點就醫）">
-        {renderList(summary?.danger_signs, "醫生今天沒有提到需要緊急就醫的徵兆。")}
+      <Section title="Warning Signs (Seek Medical Attention Immediately)">
+        {renderList(summary?.danger_signs, "The doctor did not mention any emergency warning signs today.")}
       </Section>
 
-      <Section title="飲食建議">
-        <Text style={styles.subTitle}>建議多吃</Text>
-        {renderList(summary?.diet_advice?.good_to_eat, "醫生今天沒有提到要多吃什麼。")}
+      <Section title="Dietary Recommendations">
+        <Text style={styles.subTitle}>Recommended Foods</Text>
+        {renderList(summary?.diet_advice?.good_to_eat, "The doctor did not mention any recommended foods today.")}
 
-        <Text style={[styles.subTitle, { marginTop: 8 }]}>避免食用</Text>
-        {renderList(summary?.diet_advice?.avoid_eating, "醫生今天沒有提到要避免什麼。")}
+        <Text style={[styles.subTitle, { marginTop: 8 }]}>Foods to Avoid</Text>
+        {renderList(summary?.diet_advice?.avoid_eating, "The doctor did not mention any foods to avoid today.")}
       </Section>
 
-      <Section title="回診提醒">
+      <Section title="Follow-up Reminder">
         <Text style={styles.text}>
           {summary?.follow_up?.date_time?.trim()
-            ? `${summary.follow_up.date_time}（${summary.follow_up.day_of_week || "未提供星期"}）`
-            : "醫生今天沒有交代回診時間。"}
+            ? `${summary.follow_up.date_time} (${summary.follow_up.day_of_week || "Day not provided"})`
+            : "The doctor did not specify a follow-up appointment time today."}
         </Text>
-        <Text style={styles.subTitle}>回診前要做的事</Text>
-        {renderList(summary?.follow_up?.tasks, "醫生今天沒有交代要先準備什麼。")}
+        <Text style={styles.subTitle}>Tasks Before Follow-up</Text>
+        {renderList(summary?.follow_up?.tasks, "The doctor did not mention any preparation tasks today.")}
       </Section>
 
-      <Section title="語音廣播摘要（可直接唸給長輩聽）">
+      <Section title="Audio Summary (Can be read directly to seniors)">
         <Text style={styles.text}>
-          {summary?.audio_summary?.trim() ? summary.audio_summary : "醫生今天沒有足夠資訊可以整理成語音摘要。"}
+          {summary?.audio_summary?.trim() ? summary.audio_summary : "The doctor did not provide enough information for an audio summary today."}
         </Text>
       </Section>
     </View>

@@ -1,8 +1,8 @@
 //試錄音後並撥放
 
-import React, { useState } from 'react';
-import { View, Text, Button, StyleSheet } from 'react-native';
 import { Audio } from 'expo-av';
+import React, { useState } from 'react';
+import { Button, StyleSheet, Text, View } from 'react-native';
 
 const AudioRecorderWithPlayback: React.FC = () => {
   const [recording, setRecording] = useState<Audio.Recording | null>(null);
@@ -15,7 +15,7 @@ const AudioRecorderWithPlayback: React.FC = () => {
     try {
       const permission = await Audio.requestPermissionsAsync();
       if (!permission.granted) {
-        alert("需要錄音權限");
+        alert("Recording permission required");
         return;
       }
 
@@ -71,17 +71,17 @@ const AudioRecorderWithPlayback: React.FC = () => {
 
   return (
     <View style={styles.container}>
-      <Text>{isRecording ? "錄音中..." : "準備錄音"}</Text>
+      <Text>{isRecording ? "Recording..." : "Ready to Record"}</Text>
       <Button
-        title={isRecording ? "停止錄音" : "開始錄音"}
+        title={isRecording ? "Stop Recording" : "Start Recording"}
         onPress={isRecording ? stopRecording : startRecording}
       />
 
       {uri && (
         <View style={{ marginTop: 10 }}>
-          <Button title="播放錄音" onPress={playRecording} />
-          <Button title="停止播放" onPress={stopPlayback} />
-          <Text style={{ marginTop: 5 }}>錄音檔路徑: {uri}</Text>
+          <Button title="Play Recording" onPress={playRecording} />
+          <Button title="Stop Playback" onPress={stopPlayback} />
+          <Text style={{ marginTop: 5 }}>Recording file path: {uri}</Text>
         </View>
       )}
     </View>

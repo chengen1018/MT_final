@@ -5,7 +5,7 @@ import { View, Text, StyleSheet } from 'react-native';
 const ResultDisplay: React.FC<{ text: string }> = ({ text }) => {
   return (
     <View style={styles.container}>
-      <Text style={styles.title}>LLM 分析結果：</Text>
+      <Text style={styles.title}>轉錄文字：</Text>
       <Text>{text}</Text>
     </View>
   );

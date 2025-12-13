@@ -5,9 +5,11 @@ import { StyleSheet, Text, View } from "react-native";
 //自訂的component
 import AudioRecorder from '@/components/AudioRecorder';
 import ResultDisplay from '@/components/ResultDisplay';
+import ElderSummaryDisplay, { type ElderSummary } from "@/components/ElderSummaryDisplay";
 
 export default function RecordScreen() {
   const [analysisText, setAnalysisText] = useState("");
+  const [summary, setSummary] = useState<ElderSummary | null>(null);
   const [loading, setLoading] = useState(false);
 
   // ✅ 注意：Google STT v1 不支援 AAC/m4a（Expo HIGH_QUALITY 預設就是 m4a/AAC）
@@ -15,10 +17,16 @@ export default function RecordScreen() {
   // 在 `.env` 設定：EXPO_PUBLIC_STT_SERVER_URL=http://你的IP:3001/stt
   const STT_SERVER_URL = process.env.EXPO_PUBLIC_STT_SERVER_URL || "http://localhost:3001/stt";
 
+  const getSummaryUrl = () => {
+    if (STT_SERVER_URL.endsWith("/stt")) return STT_SERVER_URL.replace(/\/stt$/, "/summary");
+    return `${STT_SERVER_URL.replace(/\/$/, "")}/summary`;
+  };
+
   // 上傳錄音檔給 Google STT API
   const uploadAudioToServer = async (uri: string) => {
     setLoading(true);
     setAnalysisText(""); // 清空上次結果
+    setSummary(null); // 清空上次摘要
 
     try {
       // 1. 將本地錄音檔 (URI) 讀取為 Base64 字串
@@ -45,8 +53,28 @@ export default function RecordScreen() {
 
       if (response.ok) {
         const transcription = result?.transcription || "";
-        if (transcription) setAnalysisText(`✅ 轉錄成功：\n\n${transcription}`);
-        else setAnalysisText("⚠️ 轉錄完成，但沒有辨識出任何文字 (可能是聲音太小或空白)。");
+        if (transcription) {
+          setAnalysisText(`✅ 轉錄成功：\n\n${transcription}`);
+
+          // 4) 轉錄成功後，呼叫 /summary 讓 Gemini 摘要成長輩友善 JSON
+          const summaryResp = await fetch(getSummaryUrl(), {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({
+              transcription,
+              elderTitle: "阿公/阿嬤",
+            }),
+          });
+          const summaryResult = await summaryResp.json();
+          if (summaryResp.ok) {
+            setSummary(summaryResult?.summary ?? null);
+          } else {
+            console.error("Summary Server Error:", summaryResult);
+            setAnalysisText((prev) => `${prev}\n\n❌ 摘要失敗：${summaryResult?.error || "未知錯誤"}`);
+          }
+        } else {
+          setAnalysisText("⚠️ 轉錄完成，但沒有辨識出任何文字 (可能是聲音太小或空白)。");
+        }
       } else {
         console.error("STT Server Error:", result);
         setAnalysisText(`❌ 轉錄失敗: ${result.error?.message || result.error || "未知錯誤"}`);
@@ -72,6 +100,7 @@ export default function RecordScreen() {
 
       {/* 結果顯示 */}
       {analysisText !== "" && <ResultDisplay text={analysisText} />}
+      {summary && <ElderSummaryDisplay summary={summary} />}
     </View>
   );
 }

@@ -1,6 +1,6 @@
 import * as FileSystem from 'expo-file-system/legacy'; // SDK 54 起：legacy methods 需從 /legacy 匯入
 import React, { useState } from "react";
-import { StyleSheet, Text, View } from "react-native";
+import { StyleSheet, Text, View, ScrollView } from "react-native";
 
 //自訂的component
 import AudioRecorder from '@/components/AudioRecorder';
@@ -89,7 +89,10 @@ export default function RecordScreen() {
   };
 
   return (
-    <View style={styles.container}>
+    <ScrollView 
+      style={styles.container} 
+      contentContainerStyle={styles.scrollContent}
+    >
       <Text style={styles.title}>🎤 語音轉文字 (Google STT)</Text>
 
       {/* 錄音元件 */}
@@ -101,15 +104,18 @@ export default function RecordScreen() {
       {/* 結果顯示 */}
       {analysisText !== "" && <ResultDisplay text={analysisText} />}
       {summary && <ElderSummaryDisplay summary={summary} />}
-    </View>
+    </ScrollView>
   );
 }
 
 const styles = StyleSheet.create({
   container: {
     flex: 1,
+  },
+  scrollContent: {
     padding: 20,
     paddingTop: 70,
+    paddingBottom: 50, // 增加底部留白，避免滑到底時被手機邊緣切到
   },
   title: {
     fontSize: 24,

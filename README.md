@@ -1,79 +1,259 @@
-# Welcome to your Expo app 👋
+# Medical Conversation Assistant 🏥
 
-This is an [Expo](https://expo.dev) project created with [`create-expo-app`](https://www.npmjs.com/package/create-expo-app).
+A mobile application built with Expo that helps record and summarize doctor-patient conversations using speech-to-text and AI-powered summarization.
 
-## Get started
+## 📋 Table of Contents
 
-1. Install dependencies
+- [Features](#-features)
+- [Prerequisites](#-prerequisites)
+- [Installation](#-installation)
+- [API Key Configuration](#-api-key-configuration)
+- [Running the Project](#-running-the-project)
+- [Project Structure](#-project-structure)
+- [Technologies Used](#-technologies-used)
+- [Troubleshooting](#-troubleshooting)
 
-   ```bash
-   npm install
-   ```
+## ✨ Features
 
-2. Start the app
+- **Voice Recording**: High-quality audio recording for doctor-patient conversations
+- **Speech-to-Text**: Automatic transcription using Google Speech-to-Text API
+- **AI Summarization**: Intelligent conversation summary using Google Gemini AI
+- **Structured Medical Information**: Extracts diagnosis, prohibitions, danger signs, diet advice, and follow-up information
+- **Cross-platform**: Works on iOS, Android, and web
 
-   ```bash
-   npx expo start
-   ```
+## 📦 Prerequisites
 
-## Google STT（語音轉文字）注意事項
+Before you begin, ensure you have the following installed:
 
-本專案使用 `expo-av` 的 `HIGH_QUALITY` 錄音，預設輸出多半是 **m4a/AAC**。但 **Google Speech-to-Text v1 不支援 AAC**，所以前端不能直接呼叫 `speech:recognize`。
+- **Node.js** (v18 or higher) - [Download here](https://nodejs.org/)
+- **npm** (comes with Node.js)
+- **Expo CLI** (will be installed via npx)
+- **FFmpeg** (automatically installed via ffmpeg-static package)
 
-本專案已加上一個小型後端 `server/`，流程是：**前端上傳 base64(m4a) → 後端用 ffmpeg 轉成 FLAC → 呼叫 Google STT → 回傳文字**。
+For mobile testing:
+- **Expo Go** app on your mobile device ([iOS](https://apps.apple.com/app/expo-go/id982107779) | [Android](https://play.google.com/store/apps/details?id=host.exp.exponent))
+- OR **Android Studio** for Android Emulator
+- OR **Xcode** for iOS Simulator (macOS only)
 
-### 啟動 STT server
+## 🔧 Installation
 
-1. 在專案根目錄建立 `.env`（可由 `env.example.txt` 複製），至少填入：
-
-   - `EXPO_PUBLIC_GOOGLE_API_KEY=...`
-   - `EXPO_PUBLIC_STT_SERVER_URL=http://你的IP:3001/stt`
-
-2. 安裝並啟動後端：
-
-   ```bash
-   cd server
-   npm install
-   npm run start
-   ```
-
-3. 啟動 Expo：
-
-   ```bash
-   npm run start
-   ```
-
-> 如果你用手機實機跑 Expo Go：`EXPO_PUBLIC_STT_SERVER_URL` 不能用 `localhost`，要改成你電腦在同一個 Wi‑Fi 下的區網 IP（例如 `http://192.168.x.x:3001/stt`）。
-
-In the output, you'll find options to open the app in a
-
-- [development build](https://docs.expo.dev/develop/development-builds/introduction/)
-- [Android emulator](https://docs.expo.dev/workflow/android-studio-emulator/)
-- [iOS simulator](https://docs.expo.dev/workflow/ios-simulator/)
-- [Expo Go](https://expo.dev/go), a limited sandbox for trying out app development with Expo
-
-You can start developing by editing the files inside the **app** directory. This project uses [file-based routing](https://docs.expo.dev/router/introduction).
-
-## Get a fresh project
-
-When you're ready, run:
+### 1. Clone the Repository
 
 ```bash
-npm run reset-project
+git clone <your-repository-url>
+cd MT_final_project
 ```
 
-This command will move the starter code to the **app-example** directory and create a blank **app** directory where you can start developing.
+### 2. Install Dependencies
 
-## Learn more
+Install the main app dependencies:
 
-To learn more about developing your project with Expo, look at the following resources:
+```bash
+npm install
+```
 
-- [Expo documentation](https://docs.expo.dev/): Learn fundamentals, or go into advanced topics with our [guides](https://docs.expo.dev/guides).
-- [Learn Expo tutorial](https://docs.expo.dev/tutorial/introduction/): Follow a step-by-step tutorial where you'll create a project that runs on Android, iOS, and the web.
+Install the backend server dependencies:
 
-## Join the community
+```bash
+cd server
+npm install
+cd ..
+```
 
-Join our community of developers creating universal apps.
+## 🔑 API Key Configuration
 
-- [Expo on GitHub](https://github.com/expo/expo): View our open source platform and contribute.
-- [Discord community](https://chat.expo.dev): Chat with Expo users and ask questions.
+This project requires Google API keys for Speech-to-Text and Gemini AI services.
+
+### Step 1: Get Your API Keys
+
+1. **Google Cloud API Key** (for Speech-to-Text):
+   - Go to [Google Cloud Console](https://console.cloud.google.com/)
+   - Create a new project or select an existing one
+   - Enable the **Cloud Speech-to-Text API**
+   - Go to **APIs & Services > Credentials**
+   - Click **Create Credentials > API Key**
+   - Copy your API key
+
+2. **Gemini API Key** (for AI Summarization):
+   - Go to [Google AI Studio](https://aistudio.google.com/app/apikey)
+   - Click **Get API Key** or **Create API Key**
+   - Copy your API key
+
+### Step 2: Configure Environment Variables
+
+1. In the project root directory, create a `.env` file:
+
+```bash
+# Copy the example file
+cp env.example.txt .env
+```
+
+2. Open the `.env` file and fill in your API keys:
+
+```env
+# Google API Key for Speech-to-Text
+EXPO_PUBLIC_GOOGLE_API_KEY=YOUR_GOOGLE_API_KEY_HERE
+
+# STT Server URL
+# For local development (emulator/simulator):
+EXPO_PUBLIC_STT_SERVER_URL=http://localhost:3001/stt
+
+# For physical device testing on the same Wi-Fi network:
+# Replace 192.168.x.x with your computer's local IP address
+# EXPO_PUBLIC_STT_SERVER_URL=http://192.168.x.x:3001/stt
+
+# Gemini API Key (for backend summarization)
+GEMINI_API_KEY=YOUR_GEMINI_API_KEY_HERE
+
+# Gemini Model to use
+GEMINI_MODEL=gemini-3.0-pro-preview
+```
+
+### Finding Your Local IP Address (for Physical Device Testing)
+
+**Windows:**
+```bash
+ipconfig
+# Look for "IPv4 Address" under your Wi-Fi adapter
+```
+
+**macOS/Linux:**
+```bash
+ifconfig
+# Look for "inet" under your Wi-Fi interface (usually en0 or wlan0)
+```
+
+**Important Notes:**
+- ⚠️ **Never commit the `.env` file to GitHub** - it's already in `.gitignore`
+- 🔒 Keep your API keys secret and secure
+- 📱 For physical device testing, your phone and computer must be on the **same Wi-Fi network**
+
+## 🚀 Running the Project
+
+### Option 1: Using Two Terminals (Recommended)
+
+**Terminal 1 - Start the Backend Server:**
+
+```bash
+cd server
+npm run start
+```
+
+You should see:
+```
+[stt-server] Listening on http://localhost:3001
+```
+
+**Terminal 2 - Start the Expo App:**
+
+```bash
+# In the project root directory
+npx expo start
+```
+
+### Option 2: Using npm-run-all (Alternative)
+
+You can also create a script to run both servers simultaneously. Add this to your root `package.json`:
+
+```json
+"scripts": {
+  "dev": "npm-run-all --parallel start server",
+  "server": "cd server && npm start"
+}
+```
+
+Then install npm-run-all:
+```bash
+npm install --save-dev npm-run-all
+```
+
+And run:
+```bash
+npm run dev
+```
+
+### Accessing the App
+
+After starting Expo, you'll see a QR code and several options:
+
+- **Press `a`** - Open in Android emulator
+- **Press `i`** - Open in iOS simulator (macOS only)
+- **Press `w`** - Open in web browser
+- **Scan QR code** - Open in Expo Go app on your physical device
+
+## 📁 Project Structure
+
+```
+MT_final_project/
+├── app/                      # Main application code (Expo Router)
+│   ├── (tabs)/              # Tab-based navigation screens
+│   ├── _layout.tsx          # Root layout
+│   └── modal.tsx            # Modal screens
+├── components/              # Reusable React components
+├── server/                  # Backend server for STT processing
+│   ├── index.js            # Express server with STT and summarization endpoints
+│   ├── package.json        # Server dependencies
+│   └── node_modules/       # Server dependencies
+├── assets/                  # Images, fonts, and other static files
+├── constants/              # App constants and configuration
+├── hooks/                  # Custom React hooks
+├── .env                    # Environment variables (create this file)
+├── env.example.txt         # Example environment variables
+├── app.json               # Expo configuration
+├── package.json           # Main app dependencies
+└── README.md              # This file
+```
+
+## 🛠 Technologies Used
+
+### Frontend
+- **Expo** (~54.0.27) - React Native framework
+- **React** (19.1.0) - UI library
+- **React Native** (0.81.5) - Mobile framework
+- **Expo Router** (~6.0.17) - File-based routing
+- **Expo AV** (~16.0.8) - Audio recording and playback
+- **React Navigation** - Navigation library
+
+### Backend
+- **Express** (^5.1.0) - Web server framework
+- **Google Generative AI** (^0.24.1) - Gemini API client
+- **FFmpeg** - Audio format conversion
+- **CORS** - Cross-origin resource sharing
+- **dotenv** - Environment variable management
+
+### APIs
+- **Google Speech-to-Text API** - Voice transcription
+- **Google Gemini API** - AI-powered summarization
+
+
+
+### Getting Help
+
+If you encounter other issues:
+1. Check the terminal logs for error messages
+2. Verify all dependencies are installed
+3. Ensure API keys are valid and have the correct permissions
+4. Try clearing caches and reinstalling dependencies
+
+## 📝 Development Notes
+
+### Audio Processing Flow
+
+1. **Recording**: App records audio in high quality (m4a/AAC format)
+2. **Upload**: Audio is converted to base64 and sent to the backend
+3. **Conversion**: Backend uses FFmpeg to convert m4a to FLAC format
+4. **Transcription**: FLAC audio is sent to Google Speech-to-Text API
+5. **Summarization**: Transcribed text is processed by Gemini AI
+6. **Display**: Structured medical information is returned to the app
+
+### Environment Variables
+
+- Variables prefixed with `EXPO_PUBLIC_` are accessible in the frontend
+- Other variables (like `GEMINI_API_KEY`) are only used in the backend
+- Never expose sensitive API keys in frontend code
+
+## 📄 License
+
+This project is created for educational purposes as part of the Multimedia Technology course at CCU.
+
+---

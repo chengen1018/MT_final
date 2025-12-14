@@ -1,54 +1,93 @@
 import { useLocalSearchParams, Stack } from 'expo-router';
-import React from 'react';
-import { ScrollView, StyleSheet, Text, View } from 'react-native';
+import React, { useState, useEffect } from 'react'; 
+import { ScrollView, StyleSheet, Text, View, ActivityIndicator } from 'react-native'; 
 
 import ElderSummaryDisplay, { type ElderSummary } from "@/components/ElderSummaryDisplay";
-// 移除 ResultDisplay 的引入，因為不再顯示原始轉錄文字
-// import ResultDisplay from '@/components/ResultDisplay';
+// 引入歷史服務
+import { getRecordById } from '@/services/historyService'; 
 
 /**
  * 分析結果顯示頁面
- * 透過路由參數接收 transcription (轉錄文字) 和 summaryJson (結構化摘要 JSON 字串)
  */
 export default function AnalysisScreen() {
-  // 保持接收參數，因為我們需要用 transcription 來顯示錯誤訊息（如果摘要失敗）
-  const { transcription, summaryJson } = useLocalSearchParams<{ transcription?: string, summaryJson?: string }>();
+  const { transcription, summaryJson, recordId } = useLocalSearchParams<{ 
+    transcription?: string, 
+    summaryJson?: string, 
+    recordId?: string 
+  }>();
 
-  let summary: ElderSummary | null = null;
-  let analysisText = transcription || "無法取得轉錄文字。";
+  const [summary, setSummary] = useState<ElderSummary | null>(null);
+  const [analysisText, setAnalysisText] = useState("正在載入內容...");
+  const [loading, setLoading] = useState(true);
 
-  if (summaryJson) {
-    try {
-      // 將傳入的 JSON 字串解析回 ElderSummary 物件
-      const parsedSummary = JSON.parse(summaryJson);
-      // 確保解析結果符合 ElderSummary 結構
-      if (parsedSummary && typeof parsedSummary === 'object') {
-        summary = parsedSummary as ElderSummary;
+  // 載入資料的函式
+  const loadData = async () => {
+    setLoading(true);
+    
+    // 情境 1: 從 History 頁面導航 (使用 ID 取得完整紀錄)
+    if (recordId) {
+      const record = await getRecordById(recordId);
+      if (record) {
+        setAnalysisText(record.transcription);
+        setSummary(record.summary);
+      } else {
+        setAnalysisText("❌ 無法找到該筆看診紀錄。");
+        setSummary(null);
       }
-    } catch (e) {
-      console.error("解析 ElderSummary JSON 失敗:", e);
-      // 如果解析失敗，將錯誤訊息附加到 analysisText 中，並在下方錯誤區塊中顯示
-      analysisText = analysisText + "\n\n❌ 錯誤：無法載入結構化摘要資料。";
+    } 
+    // 情境 2: 從 Record 頁面導航 (直接傳遞資料)
+    else if (summaryJson || transcription) {
+      setAnalysisText(transcription || "無法取得轉錄文字。");
+      let parsedSummary: ElderSummary | null = null;
+      
+      if (summaryJson) {
+        try {
+          const parsed = JSON.parse(summaryJson);
+          if (parsed && typeof parsed === 'object') {
+            parsedSummary = parsed as ElderSummary;
+          }
+        } catch (e) {
+          console.error("解析 ElderSummary JSON 失敗:", e);
+          setAnalysisText((prev) => prev + "\n\n❌ 錯誤：無法載入結構化摘要資料。");
+        }
+      }
+      setSummary(parsedSummary);
+    } 
+    // 情境 3: 無資料
+    else {
+      setAnalysisText("❌ 無法載入分析資料。");
+      setSummary(null);
     }
-  }
 
+    setLoading(false);
+  };
+
+  // 監聽路由參數變化並載入資料
+  useEffect(() => {
+    loadData();
+    // 依賴項只包含路由參數
+  }, [recordId, summaryJson, transcription]); 
+
+  // 根據來源決定導航欄標題
+  const screenTitle = recordId ? '看診紀錄詳情' : 'Report';
+  
   return (
     <>
-      <Stack.Screen options={{ title: 'Report' }} />
+      <Stack.Screen options={{ title: screenTitle }} />
       <ScrollView
         style={styles.container}
         contentContainerStyle={styles.scrollContent}
       >
         <Text style={styles.title}>🎙️ 語音分析報告</Text>
         
-        {/* 轉錄文字顯示區塊已移除 */}
-        {/* <ResultDisplay text={analysisText} /> */}
-
-        {/* LLM 結構化摘要顯示 (分段/朗讀功能已包含) */}
-        {summary ? (
+        {loading ? (
+          <View style={styles.loadingContainer}>
+            <ActivityIndicator size="large" color="#3b82f6" />
+            <Text style={styles.loadingText}>載入中...</Text>
+          </View>
+        ) : summary ? (
           <ElderSummaryDisplay summary={summary} />
         ) : (
-          // 當 summary 無法載入或為 null 時的錯誤提示，同時顯示原始轉錄內容作為參考
           <View style={styles.errorContainer}>
               <Text style={styles.errorText}>❌ 無法顯示結構化摘要。資料載入失敗或格式錯誤。</Text>
               <Text style={styles.errorTextDetail}>原始轉錄文字：{analysisText}</Text>
@@ -60,6 +99,7 @@ export default function AnalysisScreen() {
 }
 
 const styles = StyleSheet.create({
+    // ... (樣式保持不變，新增 loading 相關樣式)
   container: {
     flex: 1,
     backgroundColor: '#f8f8f8', 
@@ -93,5 +133,15 @@ const styles = StyleSheet.create({
     color: '#b91c1c',
     fontSize: 14,
     marginTop: 5,
+  },
+  loadingContainer: {
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginTop: 50,
+    gap: 10,
+  },
+  loadingText: {
+    fontSize: 16,
+    color: '#6b7280',
   }
 });

@@ -20,6 +20,7 @@ const MAPPING = {
   'chevron.right': 'chevron-right',
   'mic.fill': 'mic',
   'doc.text.fill': 'description',
+  'list.bullet.rectangle.fill': 'history',
 } as IconMapping;
 
 /**

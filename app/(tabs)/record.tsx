@@ -1,9 +1,11 @@
-// chengen1018/mt_final/MT_final-main/app/(tabs)/record.tsx
-
 import * as FileSystem from 'expo-file-system/legacy';
 import { useRouter } from 'expo-router'; // <-- 引入 useRouter
 import React, { useState } from "react";
 import { ScrollView, StyleSheet, Text } from "react-native";
+
+// --- 新增引入 (在頂部) ---
+import { saveRecord } from '@/services/historyService'; 
+import { ElderSummary } from '@/components/ElderSummaryDisplay';
 
 //自訂的component
 import AudioRecorder from '@/components/AudioRecorder';
@@ -34,7 +36,10 @@ export default function RecordScreen() {
     setLoading(true);
 
     let transcription = "正在處理中...";
-    let finalSummaryJson = null;
+    // VVV [新增] 用於儲存解析後的 ElderSummary 物件 VVV
+    let finalSummary: ElderSummary | null = null; 
+    // VVV [修改] 保持這個變數用於導航 (JSON 字串) VVV
+    let finalSummaryJson: string | null = null;
 
     try {
       // 1. 將本地錄音檔 (URI) 讀取為 Base64 字串
@@ -73,7 +78,17 @@ export default function RecordScreen() {
           });
           const summaryResult = await summaryResp.json();
           if (summaryResp.ok) {
-             finalSummaryJson = JSON.stringify(summaryResult?.summary ?? null);
+            // VVV [修改/新增]：解析物件，儲存紀錄 VVV
+            finalSummary = summaryResult?.summary ?? null;
+
+            if (finalSummary) {
+              await saveRecord(transcription, finalSummary);
+              // 儲存成功後，將物件轉為 JSON 字串用於導航
+              finalSummaryJson = JSON.stringify(finalSummary); 
+            } else {
+              finalSummaryJson = null;
+            }
+       // ^^^ [修改/新增] ^^^
           } else {
             console.error("Summary Server Error:", summaryResult);
             transcription += `\n\n❌ Summary failed: ${summaryResult?.error || "Unknown error"}`;

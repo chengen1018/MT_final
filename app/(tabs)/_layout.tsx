@@ -17,6 +17,15 @@ export default function TabLayout() {
         tabBarButton: HapticTab,
       }}>
 
+      {/* 1. 新增 History Tab */}
+      <Tabs.Screen
+        name="history"
+        options={{
+          title: 'history',
+          tabBarIcon: ({ color }) => <IconSymbol size={28} name="list.bullet.rectangle.fill" color={color} />,
+        }}
+      />
+
       <Tabs.Screen
         name="record"
         options={{
